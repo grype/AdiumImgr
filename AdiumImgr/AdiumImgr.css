@@ -1,0 +1,6 @@
+img[src*="adiumImgr"] {
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  width: auto;
+}

@@ -1,0 +1,349 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		63DD1E13D670CADE6EAC0BE9 /* libPods-AdiumImgr.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B8C252D6EEF43300ED88E5CB /* libPods-AdiumImgr.a */; };
+		C4CF81951A5D12D600FFD515 /* AdiumImgr.m in Sources */ = {isa = PBXBuildFile; fileRef = C4CF81941A5D12D600FFD515 /* AdiumImgr.m */; };
+		C4CF81971A5D1A8500FFD515 /* AIUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4CF81961A5D1A8500FFD515 /* AIUtilities.framework */; };
+		C4CF81991A5D1A9200FFD515 /* Adium.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4CF81981A5D1A9200FFD515 /* Adium.framework */; };
+		C4CF819C1A5D1EEA00FFD515 /* Rules.plist in Resources */ = {isa = PBXBuildFile; fileRef = C4CF819B1A5D1EEA00FFD515 /* Rules.plist */; };
+		C4CF819E1A5D1F3200FFD515 /* AdiumImgr.css in Resources */ = {isa = PBXBuildFile; fileRef = C4CF819D1A5D1F3200FFD515 /* AdiumImgr.css */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		2E54A3A45167E5C26F85E234 /* Pods-AdiumImgr.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AdiumImgr.release.xcconfig"; path = "Pods/Target Support Files/Pods-AdiumImgr/Pods-AdiumImgr.release.xcconfig"; sourceTree = "<group>"; };
+		B8C252D6EEF43300ED88E5CB /* libPods-AdiumImgr.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AdiumImgr.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C409566F1A3ED94600FD5151 /* AdiumImgr.AdiumPlugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AdiumImgr.AdiumPlugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		C40956731A3ED94600FD5151 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C4CF81931A5D12D600FFD515 /* AdiumImgr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AdiumImgr.h; sourceTree = "<group>"; };
+		C4CF81941A5D12D600FFD515 /* AdiumImgr.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AdiumImgr.m; sourceTree = "<group>"; };
+		C4CF81961A5D1A8500FFD515 /* AIUtilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AIUtilities.framework; sourceTree = "<group>"; };
+		C4CF81981A5D1A9200FFD515 /* Adium.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Adium.framework; sourceTree = "<group>"; };
+		C4CF819A1A5D1AD100FFD515 /* AdiumImgr.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AdiumImgr.pch; sourceTree = "<group>"; };
+		C4CF819B1A5D1EEA00FFD515 /* Rules.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Rules.plist; sourceTree = "<group>"; };
+		C4CF819D1A5D1F3200FFD515 /* AdiumImgr.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; path = AdiumImgr.css; sourceTree = "<group>"; };
+		E5ACC2452B5D6722B7F6D3FB /* Pods-AdiumImgr.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AdiumImgr.debug.xcconfig"; path = "Pods/Target Support Files/Pods-AdiumImgr/Pods-AdiumImgr.debug.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C409566C1A3ED94600FD5151 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DD1E13D670CADE6EAC0BE9 /* libPods-AdiumImgr.a in Frameworks */,
+				C4CF81991A5D1A9200FFD515 /* Adium.framework in Frameworks */,
+				C4CF81971A5D1A8500FFD515 /* AIUtilities.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0405A6434AF597D178E257F4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C4CF81981A5D1A9200FFD515 /* Adium.framework */,
+				C4CF81961A5D1A8500FFD515 /* AIUtilities.framework */,
+				B8C252D6EEF43300ED88E5CB /* libPods-AdiumImgr.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AC00A006B59BFFACC15AAC2F /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				E5ACC2452B5D6722B7F6D3FB /* Pods-AdiumImgr.debug.xcconfig */,
+				2E54A3A45167E5C26F85E234 /* Pods-AdiumImgr.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		C40956661A3ED94600FD5151 = {
+			isa = PBXGroup;
+			children = (
+				C40956711A3ED94600FD5151 /* AdiumImgr */,
+				C40956701A3ED94600FD5151 /* Products */,
+				AC00A006B59BFFACC15AAC2F /* Pods */,
+				0405A6434AF597D178E257F4 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		C40956701A3ED94600FD5151 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C409566F1A3ED94600FD5151 /* AdiumImgr.AdiumPlugin */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C40956711A3ED94600FD5151 /* AdiumImgr */ = {
+			isa = PBXGroup;
+			children = (
+				C40956721A3ED94600FD5151 /* Supporting Files */,
+				C4CF81931A5D12D600FFD515 /* AdiumImgr.h */,
+				C4CF81941A5D12D600FFD515 /* AdiumImgr.m */,
+			);
+			path = AdiumImgr;
+			sourceTree = "<group>";
+		};
+		C40956721A3ED94600FD5151 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C4CF819D1A5D1F3200FFD515 /* AdiumImgr.css */,
+				C4CF819B1A5D1EEA00FFD515 /* Rules.plist */,
+				C40956731A3ED94600FD5151 /* Info.plist */,
+				C4CF819A1A5D1AD100FFD515 /* AdiumImgr.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C409566E1A3ED94600FD5151 /* AdiumImgr */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C40956761A3ED94600FD5151 /* Build configuration list for PBXNativeTarget "AdiumImgr" */;
+			buildPhases = (
+				BEE39DA115C1E1F1FD6CC880 /* Check Pods Manifest.lock */,
+				C409566B1A3ED94600FD5151 /* Sources */,
+				C409566C1A3ED94600FD5151 /* Frameworks */,
+				C409566D1A3ED94600FD5151 /* Resources */,
+				2A81566860630E18A89F448E /* Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AdiumImgr;
+			productName = AdiumImgr;
+			productReference = C409566F1A3ED94600FD5151 /* AdiumImgr.AdiumPlugin */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C40956671A3ED94600FD5151 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+				ORGANIZATIONNAME = "Pavel Skaldin";
+				TargetAttributes = {
+					C409566E1A3ED94600FD5151 = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+				};
+			};
+			buildConfigurationList = C409566A1A3ED94600FD5151 /* Build configuration list for PBXProject "AdiumImgr" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = C40956661A3ED94600FD5151;
+			productRefGroup = C40956701A3ED94600FD5151 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C409566E1A3ED94600FD5151 /* AdiumImgr */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C409566D1A3ED94600FD5151 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C4CF819C1A5D1EEA00FFD515 /* Rules.plist in Resources */,
+				C4CF819E1A5D1F3200FFD515 /* AdiumImgr.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2A81566860630E18A89F448E /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-AdiumImgr/Pods-AdiumImgr-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		BEE39DA115C1E1F1FD6CC880 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C409566B1A3ED94600FD5151 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C4CF81951A5D12D600FFD515 /* AdiumImgr.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		C40956741A3ED94600FD5151 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		C40956751A3ED94600FD5151 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		C40956771A3ED94600FD5151 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E5ACC2452B5D6722B7F6D3FB /* Pods-AdiumImgr.debug.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PREFIX_HEADER = "$(SRCROOT)/AdiumImgr/AdiumImgr.pch";
+				INFOPLIST_FILE = AdiumImgr/Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = AdiumPlugin;
+			};
+			name = Debug;
+		};
+		C40956781A3ED94600FD5151 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2E54A3A45167E5C26F85E234 /* Pods-AdiumImgr.release.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PREFIX_HEADER = "$(SRCROOT)/AdiumImgr/AdiumImgr.pch";
+				INFOPLIST_FILE = AdiumImgr/Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Application Support/Adium 2.0/PlugIns/";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = AdiumPlugin;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C409566A1A3ED94600FD5151 /* Build configuration list for PBXProject "AdiumImgr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C40956741A3ED94600FD5151 /* Debug */,
+				C40956751A3ED94600FD5151 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C40956761A3ED94600FD5151 /* Build configuration list for PBXNativeTarget "AdiumImgr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C40956771A3ED94600FD5151 /* Debug */,
+				C40956781A3ED94600FD5151 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C40956671A3ED94600FD5151 /* Project object */;
+}

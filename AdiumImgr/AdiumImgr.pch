@@ -1,0 +1,22 @@
+//
+//  AdiumImgr.pch
+//  AdiumImgr
+//
+//  Created by Pavel Skaldin on 1/6/15.
+//  Copyright (c) 2015 Pavel Skaldin. All rights reserved.
+//
+
+#ifndef AdiumImgr_AdiumImgr_pch
+#define AdiumImgr_AdiumImgr_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+#endif
+
+
+#ifdef __OBJC__
+#import <Cocoa/Cocoa.h>
+#import <Adium/AISharedAdium.h>
+#import <AIUtilities/AIStringUtilities.h>
+#endif

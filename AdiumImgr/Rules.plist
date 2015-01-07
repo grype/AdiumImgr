@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>https?://cl.ly/image/.+</key>
+	<dict>
+		<key>#image img</key>
+		<string>src</string>
+	</dict>
+	<key>http://feedproxy.google.com/.*Imgur</key>
+	<dict>
+		<key>#image img[src*=&quot;i.imgur.com&quot;]</key>
+		<string>src</string>
+	</dict>
+	<key>https?://(.+\.)?explosm.net/comics/[0-9]+</key>
+	<dict>
+		<key>#main-comic</key>
+		<string>src</string>
+	</dict>
+	<key>https?://(.+\.)?imgur.com/.+</key>
+	<dict>
+		<key>#image img[src*=&quot;i.imgur.com&quot;]</key>
+		<string>src</string>
+	</dict>
+</dict>
+</plist>
