@@ -55,8 +55,6 @@
                               context:(id)context
                              uniqueID:(unsigned long long)uniqueID
 {
-  //XXX dump strings to console so that we don't miss anything while debuggig
-  NSLog(@"Delaying string: %@", inAttributedString.string);
   __block BOOL foundLink = NO;
   [inAttributedString enumerateAttributesInRange:NSMakeRange(0, inAttributedString.length)
                                          options:0
