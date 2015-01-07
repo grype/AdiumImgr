@@ -7,17 +7,12 @@
 		<key>#image img</key>
 		<string>src</string>
 	</dict>
-	<key>http://feedproxy.google.com/.*Imgur</key>
-	<dict>
-		<key>#image img[src*=&quot;i.imgur.com&quot;]</key>
-		<string>src</string>
-	</dict>
 	<key>https?://(.+\.)?explosm.net/comics/[0-9]+</key>
 	<dict>
 		<key>#main-comic</key>
 		<string>src</string>
 	</dict>
-	<key>https?://(.+\.)?imgur.com/.+</key>
+	<key>https?://(.+\.)?imgur.com/.+|http://feedproxy.google.com/.*Imgur</key>
 	<dict>
 		<key>#image img[src*=&quot;i.imgur.com&quot;]</key>
 		<string>src</string>
