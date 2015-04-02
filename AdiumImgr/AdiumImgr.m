@@ -12,18 +12,57 @@
 #import <HTMLReader/HTMLReader.h>
 #import <WebKit/WebKit.h>
 
-@implementation AdiumImgr {
-  NSMutableDictionary *_processInfo;
+typedef enum {
+  ProcessPayloadStateInitialized = 0,
+  ProcessPayloadStateProcessing,
+  ProcessPayloadStateFailed,
+  ProcessPayloadStateReady,
+} ProcessPayloadState;
+
+@interface ProcessPayload : NSObject
+@property (assign, nonatomic) unsigned long long uniqueID;
+@property (strong, nonatomic) id context;
+
+@property (strong, nonatomic) NSURL *url;
+@property (strong, nonatomic) NSString *mime;
+
+@property (strong, nonatomic) NSAttributedString *attributedString;
+@property (strong, nonatomic) NSAttributedString *attributedSuffixString;
+@property (strong, nonatomic) NSDictionary *attributes;
+@property (assign, nonatomic) NSRange range;
+
+@property (strong, nonatomic) NSImage *image;
+@property (strong, nonatomic) NSString *imagePath;
+@property (strong, nonatomic) NSURL *imageURL;
+
+@property (assign, nonatomic) ProcessPayloadState state;
+
+@property (readonly, nonatomic, getter=containsImage) BOOL containsImage;
+@end
+
+@implementation ProcessPayload
+
+- (BOOL)containsImage
+{
+  return self.image != nil && self.imagePath != nil;
+}
+
+@end
+
+@implementation AdiumImgr
+{
+  NSMutableSet *_processInfo;
   NSMutableDictionary *_parserInfo;
 }
 
 #pragma mark - AIPlugin
 
-- (void) installPlugin {
+- (void) installPlugin
+{
   [self clearCache];
   [[adium contentController] registerDelayedContentFilter:self ofType:AIFilterMessageDisplay direction:AIFilterIncoming];
   
-  _processInfo = [NSMutableDictionary dictionary];
+  _processInfo = [NSMutableSet set];
   _parserInfo = [NSMutableDictionary dictionary];
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter addObserver:self
@@ -36,7 +75,8 @@
                            object:nil];
 }
 
-- (void) uninstallPlugin {
+- (void) uninstallPlugin
+{
   [[adium contentController] unregisterDelayedContentFilter:self];
   _processInfo = nil;
   _parserInfo = nil;
@@ -45,7 +85,8 @@
 
 #pragma mark - AIContentFilter
 
-- (CGFloat)filterPriority {
+- (CGFloat)filterPriority
+{
   return DEFAULT_FILTER_PRIORITY;
 }
 
@@ -63,34 +104,19 @@
                                         NSString *scheme = [link scheme];
                                         
                                         if ([@"http" isEqualToString:scheme] == YES || [@"https" isEqualToString:scheme] == YES) {
-                                          NSString *linkString = [link absoluteString];
-                                          NSMutableArray *linkInfo = _processInfo[linkString];
-                                          if (linkInfo == nil) {
-                                            linkInfo = [NSMutableArray array];
-                                            _processInfo[linkString] = linkInfo;
-                                          }
-                                          NSMutableDictionary *info = [NSMutableDictionary dictionary];
-                                          if (inAttributedString != nil) {
-                                            info[@"attributedString"] = inAttributedString;
-                                          }
-                                          if (attrs != nil) {
-                                            info[@"attributes"] = attrs;
-                                          }
-                                          info[@"uniqueID"] = @(uniqueID);
-                                          info[@"range"] = NSStringFromRange(range);
-                                          if (link != nil) {
-                                            info[@"url"] = link;
-                                          }
-                                          if (context != nil) {
-                                            info[@"context"] = context;
-                                          }
-                                          [linkInfo addObject:info];
+                                          ProcessPayload *info = [[ProcessPayload alloc] init];
+                                          info.attributedString = inAttributedString;
+                                          info.attributes = attrs;
+                                          info.uniqueID = uniqueID;
+                                          info.range = range;
+                                          info.url = link;
+                                          info.context = context;
+                                          [_processInfo addObject:info];
                                           foundLink = YES;
                                         }
                                       }];
   
   if (foundLink == YES) {
-    [self preProcess];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
       [self process];
     });
@@ -101,70 +127,89 @@
 
 #pragma mark - Processing
 
-- (void)preProcess {
-}
-
-- (void)process {
-  NSDictionary *processInfo = _processInfo;
-  for (NSString *urlString in processInfo) {
-    NSArray *infos = processInfo[urlString];
-    for (NSDictionary *info in infos) {
-      NSURL *url = info[@"url"];
-      NSAttributedString *attributedString = info[@"attributedString"];
-      unsigned long long uniqueID = [info[@"uniqueID"] unsignedLongLongValue];
-      NSRange range = NSRangeFromString(info[@"range"]);
-      NSDictionary *attributes = info[@"attributes"];
-      id context = info[@"context"];
-      
-      NSString *imagePath = nil;
-      NSImage *image = [self cachedImageForURL:url path:&imagePath];
-      if (image != nil) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-          [self processImage:image
-                         url:url
-                        path:imagePath
-   postImageAttributedString:nil
-            attributedString:attributedString
-                       range:range
-                  attributes:attributes
-                     context:context
-                    uniqueID:uniqueID];
-        });
-      }
-      else {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-          [self processURL:url
-          attributedString:attributedString
-                     range:range
-                attributes:attributes
-                   context:context
-                  uniqueID:uniqueID];
-        });
-      }
-    }
-  }
-}
-
-- (BOOL)hasPendingProcessesForUniqueID:(unsigned long long)uniqueID {
-  if (_processInfo.count == 0) {
-    return NO;
-  }
-  NSArray *ids = [[_processInfo allValues] valueForKeyPath:@"@distinctUnionOfArrays.uniqueID"];
-  for (NSNumber *i in ids) {
-    if ([i unsignedLongLongValue] == uniqueID) {
-      return YES;
-    }
-  }
-  return NO;
-}
-
-- (void)processURL:(NSURL *)url
-  attributedString:(NSAttributedString *)inAttributedString
-             range:(NSRange)range
-        attributes:(NSDictionary *)attributes
-           context:(id)context
-          uniqueID:(unsigned long long)uniqueID
+- (void)process
 {
+  NSMutableSet *processInfo = _processInfo;
+  
+  for (ProcessPayload *payload in processInfo) {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+      [self processPayload:payload];
+    });
+  }
+}
+
+- (void)willProcessPayload:(ProcessPayload *)payload
+{
+  payload.state = ProcessPayloadStateProcessing;
+}
+
+- (void)didProcessPayload:(ProcessPayload *)payload
+{
+  if (payload.containsImage == YES) {
+    payload.state = ProcessPayloadStateReady;
+  }
+  else {
+    payload.state = ProcessPayloadStateFailed;
+  }
+  [self removePayload:payload];
+}
+
+- (void)processPayload:(ProcessPayload *)payload
+{
+  NSURL *url = payload.url;
+  if (url == nil) {
+    payload.state = ProcessPayloadStateReady;
+  }
+  
+  ProcessPayloadState state = payload.state;
+  
+  if (state == ProcessPayloadStateProcessing) {
+    return;
+  }
+  else if (state == ProcessPayloadStateFailed
+           || state == ProcessPayloadStateReady) {
+    [self didProcessPayload:payload];
+    return;
+  }
+  
+  [self willProcessPayload:payload];
+  
+  if (payload.mime == nil) {
+    [self determineMimeForPayload:payload];
+  }
+  
+  NSString *contentType = payload.mime;
+  if ([contentType containsString:@"image/"] == YES) {
+    payload.imageURL = url;
+  }
+  else if ([contentType containsString:@"text/html"] == YES) {
+    NSDictionary *rules = [self ruleForURL:url];
+    if (rules.count > 0) {
+      [self processHTMLFromURL:url forPayload:payload withRules:rules];
+    }
+  }
+  
+  if (payload.imageURL == nil) {
+    [self didProcessPayload:payload];
+    return;
+  }
+  
+  [self fetchImageForPayload:payload];
+  
+  if (payload.containsImage == YES) {
+    [self finalizePayload:payload];
+  }
+  
+  [self didProcessPayload:payload];
+}
+
+- (void)determineMimeForPayload:(ProcessPayload *)payload
+{
+  NSURL *url = payload.url;
+  if (url == nil) {
+    return;
+  }
+  
   NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url
                                                          cachePolicy:NSURLRequestReturnCacheDataElseLoad
                                                      timeoutInterval:3.0];
@@ -176,260 +221,185 @@
                                     error:&urlConnectionError];
   NSDictionary *headers = [response allHeaderFields];
   NSString *contentType = headers[@"Content-Type"];
-  BOOL handled = NO;
-  if ([contentType containsString:@"image/"] == YES) {
-    handled = YES;
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-      [self processImageFromURL:url
-                     linkedFrom:url
-      postImageAttributedString:nil
-               attributedString:inAttributedString
-                          range:range
-                     attributes:attributes
-                        context:context
-                       uniqueID:uniqueID];
-    });
-  }
-  else if ([contentType containsString:@"text/html"] == YES) {
-    NSDictionary *rules = [self ruleForURL:url];
-    if (rules.count > 0) {
-      handled = YES;
-      dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [self processHTMLFromURL:url
-               forImageWithRules:rules
-                attributedString:inAttributedString
-                           range:range
-                      attributes:attributes
-                         context:context
-                        uniqueID:uniqueID];
-      });
-    }
-  }
-  if (handled == NO) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self didProcessImageURL:url
-              attributedString:inAttributedString
-                      uniqueID:uniqueID];
-    });
-  }
+  payload.mime = contentType;
 }
 
-- (void)processImageFromURL:(NSURL *)url
-                 linkedFrom:(NSURL *)linkURL
-  postImageAttributedString:(NSAttributedString *)postImageAttributedString
-           attributedString:(NSAttributedString *)inAttributedString
-                      range:(NSRange)range
-                 attributes:(NSDictionary *)attributes
-                    context:(id)context
-                   uniqueID:(unsigned long long)uniqueID
+- (void)finalizePayload:(ProcessPayload *)payload
 {
-  NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:3.0];
-  NSHTTPURLResponse *response = nil;
-  NSError *error = nil;
-  NSData *imageData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
-  if (error != nil) {
-    NSLog(@"Error fetching image from URL: %@", url);
-    [self didProcessImageURL:url
-            attributedString:inAttributedString
-                    uniqueID:uniqueID];
-    return;
-  }
-  NSString *cachedPath = nil;
-  NSURL *referencingURL = (linkURL != nil) ? linkURL : url;
-  if (imageData != nil && [self cacheImageData:imageData forURL:referencingURL cachedPath:&cachedPath] == YES) {
-    NSImage *image = [[NSImage alloc] initWithData:imageData];
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-      [self processImage:image
-                     url:url
-                    path:cachedPath
-postImageAttributedString:postImageAttributedString
-        attributedString:inAttributedString
-                   range:range
-              attributes:attributes
-                 context:context
-                uniqueID:uniqueID];
-    });
-  }
-  else {
-    NSLog(@"Failed to fetch and save image: %@", url);
-    [self didProcessImageURL:url
-            attributedString:inAttributedString
-                    uniqueID:uniqueID];
-  }
-}
-
-- (void)processHTMLFromURL:(NSURL *)url
-         forImageWithRules:(NSDictionary *)rules
-          attributedString:(NSAttributedString *)inAttributedString
-                     range:(NSRange)range
-                attributes:(NSDictionary *)attrs
-                   context:(id)context
-                  uniqueID:(unsigned long long)uniqueID
-{
-  if ([NSThread isMainThread] == NO) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self processHTMLFromURL:url
-             forImageWithRules:rules
-              attributedString:inAttributedString
-                         range:range
-                    attributes:attrs
-                       context:context
-                      uniqueID:uniqueID];
-    });
-    return;
-  }
-  
-  NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:3.0];
-  NSHTTPURLResponse *response = nil;
-  NSError *requestError = nil;
-  NSData *htmlData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&requestError];
-  if (requestError != nil) {
-    NSLog(@"Error fetching HTML from URL '%@': %@", [url absoluteString], requestError);
-    [self didProcessImageURL:url
-            attributedString:inAttributedString
-                    uniqueID:uniqueID];
-  }
-  else if (htmlData.length == 0){
-    NSLog(@"Empty HTML from URL '%@'", [url absoluteString]);
-    [self didProcessImageURL:url
-            attributedString:inAttributedString
-                    uniqueID:uniqueID];
-  }
-  else {
-    NSString *html = [[NSString alloc] initWithData:htmlData encoding:NSUTF8StringEncoding];
-    HTMLDocument *doc = [HTMLDocument documentWithString:html];
-    NSMutableSet *foundURLs = [NSMutableSet set];
-    for (NSString *query in rules) {
-      @try {
-        HTMLSelector *selector = [HTMLSelector selectorForString:query];
-        NSArray *matchedNodes = [doc nodesMatchingParsedSelector:selector];
-        for (HTMLElement *element in matchedNodes) {
-          NSString *value = [element valueForKeyPath:[NSString stringWithFormat:@"attributes.%@", rules[query]]];
-          if (value != nil) {
-            if ([value rangeOfString:@"//"].location == 0) {
-              value = [NSString stringWithFormat:@"%@:%@", url.scheme, value];
-            }
-            else if ([value rangeOfString:@"/"].location == 0) {
-              value = [NSString stringWithFormat:@"%@://%@%@", url.scheme, url.host, value];
-            }
-            
-            if (value != nil) {
-              [foundURLs addObject:value];
-            }
-          }
-        }
-      }
-      @catch(NSException *exception) {
-        NSLog(@"Error finding HTML Element matching: %@ exception: %@", query, exception);
-      }
-    }
-    
-    NSAttributedString *postImageString = nil;
-    if (foundURLs.count > 1) {
-      NSMutableDictionary *textAttributes = [attrs mutableCopy];
-      [textAttributes removeObjectForKey:NSLinkAttributeName];
-      postImageString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"[1 of %i]", (int)foundURLs.count] attributes:textAttributes];
-    }
-    
-    NSURL *imageURL = [NSURL URLWithString:[[foundURLs allObjects] firstObject]];
-    
-    if (imageURL != nil) {
-      [self didProcessHTMLFromURL:url uniqueID:uniqueID];
-      [self processImageFromURL:imageURL
-                     linkedFrom:url
-      postImageAttributedString:postImageString
-               attributedString:inAttributedString
-                          range:range
-                     attributes:attrs
-                        context:context
-                       uniqueID:uniqueID];
-    }
-    else {
-      NSLog(@"Failed to process HTML for image URL");
-      [self didProcessImageURL:url
-              attributedString:inAttributedString
-                      uniqueID:uniqueID];
-    }
-  }
-}
-
-- (void)processImage:(NSImage *)image
-                 url:(NSURL *)url
-                path:(NSString *)imagePath
-postImageAttributedString:(NSAttributedString *)postImageAttributedString
-    attributedString:(NSAttributedString *)inAttributedString
-               range:(NSRange)range
-          attributes:(NSDictionary *)attributes
-             context:(id)context
-            uniqueID:(unsigned long long)uniqueID
-{
-  AITextAttachmentExtension *attachment = [[AITextAttachmentExtension alloc] init];
-  NSTextAttachmentCell *cell = [[NSTextAttachmentCell alloc] initImageCell:image];
-  [attachment setAttachmentCell:cell];
-  [attachment setPath:imagePath];
-  [attachment setHasAlternate:NO];
-  [attachment setImageClass:@"scaledToFitImage"];
-  [attachment setShouldAlwaysSendAsText:NO];
+  NSAttributedString *attributedString = payload.attributedString;
+  NSRange range = payload.range;
+  NSDictionary *attributes = payload.attributes;
+  // use link's name if we have it, otherwise the actual url
+  // i.e. link name could be "example" that points to http://example.com
+  NSURL *url = payload.url;
   NSURL *link = attributes[NSLinkAttributeName];
   if (link == nil) {
     link = url;
   }
-  NSString *altText = [NSString stringWithFormat:@"[Image: %@]", [[inAttributedString string] substringWithRange:range]];
-  [attachment setString:altText];
   
-  NSMutableAttributedString *imageString = [[NSAttributedString attributedStringWithAttachment:attachment] mutableCopy];
-  [imageString addAttribute:NSAttachmentAttributeName value:attachment range:NSMakeRange(0, imageString.length)];
-  
-  NSMutableAttributedString *newString = [inAttributedString mutableCopy];
-  NSMutableAttributedString *replacementString = [[NSMutableAttributedString alloc] init];
-  NSMutableDictionary *textAttributes = [attributes mutableCopy];
-  [textAttributes removeObjectForKey:NSLinkAttributeName];
-  if (range.location > 0) {
-    [replacementString appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:textAttributes]];
+  // create image attachment if we have an image.
+  // we need to have that image stored in a file on disk and have path to it
+  // as that will be used to move the file to appropriate location during
+  // conversion to HTML and insertion of HTML fragments into the chat's web view.
+  // we don't really have control over that and can't guarantee that we know
+  // the destaination path at the moment...
+  NSImage *image = payload.image;
+  NSString *imagePath = payload.imagePath;
+  NSMutableAttributedString *imageString = nil;
+  if (image != nil && imagePath != nil) {
+    AITextAttachmentExtension *attachment = [[AITextAttachmentExtension alloc] init];
+    NSTextAttachmentCell *cell = [[NSTextAttachmentCell alloc] initImageCell:image];
+    [attachment setAttachmentCell:cell];
+    [attachment setPath:imagePath];
+    [attachment setHasAlternate:NO];
+    // this class is actually defined in style sheets loaded by Adium but we may want to reconsider their usage
+    [attachment setImageClass:@"scaledToFitImage"];
+    [attachment setShouldAlwaysSendAsText:NO];
+    
+    NSString *altText = [NSString stringWithFormat:@"[Image: %@]", [[attributedString string] substringWithRange:range]];
+    [attachment setString:altText];
+    
+    imageString = [[NSAttributedString attributedStringWithAttachment:attachment] mutableCopy];
+    [imageString addAttribute:NSAttachmentAttributeName value:attachment range:NSMakeRange(0, imageString.length)];
   }
-  [replacementString appendAttributedString:imageString];
-  if (postImageAttributedString != nil) {
-    [replacementString appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:textAttributes]];
-    [replacementString appendAttributedString:postImageAttributedString];
-  }
-  [replacementString appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:textAttributes]];
-  [newString insertAttributedString:replacementString atIndex:range.location];
   
-  [self didProcessImageURL:url
-          attributedString:newString
-                  uniqueID:uniqueID];
+  NSMutableAttributedString *newString = [attributedString mutableCopy];
+  
+  // if we have an image string - append optional suffix string,
+  // and insert it into original string, separating it by new line
+  if (imageString != nil) {
+    NSMutableAttributedString *replacementString = [[NSMutableAttributedString alloc] init];
+    NSMutableDictionary *textAttributes = [attributes mutableCopy];
+    [textAttributes removeObjectForKey:NSLinkAttributeName];
+    if (range.location > 0) {
+      [replacementString appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:textAttributes]];
+    }
+    NSAttributedString *suffix = payload.attributedSuffixString;
+    [replacementString appendAttributedString:imageString];
+    if (suffix != nil) {
+      [replacementString appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:textAttributes]];
+      [replacementString appendAttributedString:suffix];
+    }
+    [replacementString appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:textAttributes]];
+    [newString insertAttributedString:replacementString atIndex:range.location];
+    payload.attributedString = newString;
+  }
 }
 
-- (void)didProcessImageURL:(NSURL *)url
-          attributedString:(NSAttributedString *)attributedString
-                  uniqueID:(unsigned long long)uniqueID
+- (void)removePayload:(ProcessPayload *)payload
 {
-  [self removeProcessInfoForURL:url uniqueID:uniqueID];
-  
+  [_processInfo removeObject:payload];
+  unsigned long long uniqueID = payload.uniqueID;
   BOOL hasPendingProcesses = [self hasPendingProcessesForUniqueID:uniqueID];
   if (hasPendingProcesses == NO) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [[adium contentController] delayedFilterDidFinish:attributedString uniqueID:uniqueID];
+      [[adium contentController] delayedFilterDidFinish:payload.attributedString uniqueID:uniqueID];
     });
   }
 }
 
-- (void)didProcessHTMLFromURL:(NSURL *)url uniqueID:(unsigned long long)uniqueID {
-  [self removeProcessInfoForURL:url uniqueID:uniqueID];
+- (BOOL)hasPendingProcessesForUniqueID:(unsigned long long)uniqueID
+{
+  if (_processInfo.count == 0) {
+    return NO;
+  }
+  for (ProcessPayload *payload in _processInfo) {
+    if (payload.uniqueID == uniqueID) {
+      return YES;
+    }
+  }
+  return NO;
 }
 
-- (void)removeProcessInfoForURL:(NSURL *)url uniqueID:(unsigned long long)uniqueID {
-  NSMutableArray *infoArray = _processInfo[[url absoluteString]];
-  if (infoArray == nil) {
+- (void)fetchImageForPayload:(ProcessPayload *)payload
+{
+  NSURL *imageURL = payload.imageURL;
+  NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:imageURL
+                                                         cachePolicy:NSURLRequestReturnCacheDataElseLoad
+                                                     timeoutInterval:3.0];
+  NSHTTPURLResponse *response = nil;
+  NSError *error = nil;
+  NSData *imageData = [NSURLConnection sendSynchronousRequest:request
+                                            returningResponse:&response
+                                                        error:&error];
+  if (error != nil) {
+    NSLog(@"Error fetching image from URL: %@", imageURL);
     return;
   }
-  for (NSDictionary *info in infoArray) {
-    unsigned long long infoUniqueID = [info[@"uniqueID"] unsignedLongLongValue];
-    if (infoUniqueID != uniqueID) {
-      continue;
+  
+  NSString *cachedPath = nil;
+  NSURL *referencingURL = payload.url;
+  if (imageData != nil && [self cacheImageData:imageData
+                                        forURL:referencingURL
+                                    cachedPath:&cachedPath] == YES) {
+    NSImage *image = [[NSImage alloc] initWithData:imageData];
+    payload.image = image;
+    payload.imagePath = cachedPath;
+  }
+  else {
+    NSLog(@"Failed to fetch and save image: %@ [Ref: %@]", imageURL, referencingURL);
+  }
+}
+
+- (void)processHTMLFromURL:(NSURL *)url
+                forPayload:(ProcessPayload *)payload
+                 withRules:(NSDictionary *)rules
+{
+  NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url
+                                                         cachePolicy:NSURLRequestReturnCacheDataElseLoad
+                                                     timeoutInterval:3.0];
+  NSHTTPURLResponse *response = nil;
+  NSError *requestError = nil;
+  NSData *htmlData = [NSURLConnection sendSynchronousRequest:request
+                                           returningResponse:&response
+                                                       error:&requestError];
+  if (requestError != nil) {
+    NSLog(@"Error fetching HTML from URL '%@': %@", [url absoluteString], requestError);
+    return;
+  }
+  if (htmlData.length == 0){
+    NSLog(@"Empty HTML from URL '%@'", [url absoluteString]);
+    return;
+  }
+  
+  NSString *html = [[NSString alloc] initWithData:htmlData
+                                         encoding:NSUTF8StringEncoding];
+  HTMLDocument *doc = [HTMLDocument documentWithString:html];
+  NSMutableSet *foundURLs = [NSMutableSet set];
+  for (NSString *query in rules) {
+    @try {
+      HTMLSelector *selector = [HTMLSelector selectorForString:query];
+      NSArray *matchedNodes = [doc nodesMatchingParsedSelector:selector];
+      for (HTMLElement *element in matchedNodes) {
+        NSString *value = [element valueForKeyPath:[NSString stringWithFormat:@"attributes.%@", rules[query]]];
+        if (value != nil) {
+          if ([value rangeOfString:@"//"].location == 0) {
+            value = [NSString stringWithFormat:@"%@:%@", url.scheme, value];
+          }
+          else if ([value rangeOfString:@"/"].location == 0) {
+            value = [NSString stringWithFormat:@"%@://%@%@", url.scheme, url.host, value];
+          }
+          
+          if (value != nil) {
+            [foundURLs addObject:value];
+          }
+        }
+      }
     }
-    [infoArray removeObject:info];
-    break;
+    @catch(NSException *exception) {
+      NSLog(@"Error finding HTML Element matching: %@ exception: %@", query, exception);
+    }
+    
+    NSAttributedString *postImageString = nil;
+    if (foundURLs.count > 1) {
+      NSDictionary *attrs = payload.attributes;
+      NSMutableDictionary *textAttributes = [attrs mutableCopy];
+      [textAttributes removeObjectForKey:NSLinkAttributeName];
+      postImageString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"[1 of %i]", (int)foundURLs.count] attributes:textAttributes];
+      payload.attributedSuffixString = postImageString;
+    }
+    
+    payload.imageURL = [NSURL URLWithString:[[foundURLs allObjects] firstObject]];
   }
 }
 
@@ -505,16 +475,16 @@ postImageAttributedString:(NSAttributedString *)postImageAttributedString
   }
 }
 
-- (NSImage *)cachedImageForURL:(NSURL *)url path:(NSString **)cachedPath {
-  NSString *imagePath = [self cachePathForURL:url];
-  NSFileManager *fileManager = [NSFileManager defaultManager];
-  NSImage *image = nil;
-  if ([fileManager fileExistsAtPath:imagePath] == YES) {
-    image = [[NSImage alloc] initWithContentsOfFile:imagePath];
-  }
-  *cachedPath = imagePath;
-  return image;
-}
+//- (NSImage *)cachedImageForURL:(NSURL *)url path:(NSString **)cachedPath {
+//  NSString *imagePath = [self cachePathForURL:url];
+//  NSFileManager *fileManager = [NSFileManager defaultManager];
+//  NSImage *image = nil;
+//  if ([fileManager fileExistsAtPath:imagePath] == YES) {
+//    image = [[NSImage alloc] initWithContentsOfFile:imagePath];
+//  }
+//  *cachedPath = imagePath;
+//  return image;
+//}
 
 #pragma mark - Rules
 
