@@ -34,17 +34,36 @@ typedef enum {
 @property (strong, nonatomic) NSImage *image;
 @property (strong, nonatomic) NSString *imagePath;
 @property (strong, nonatomic) NSURL *imageURL;
+@property (strong, nonatomic) NSURL *videoURL;
 
 @property (assign, nonatomic) ProcessPayloadState state;
 
-@property (readonly, nonatomic, getter=containsImage) BOOL containsImage;
+@property (readonly, nonatomic, getter=containsImageAttachment) BOOL containsImageAttachment;
+@property (readonly, nonatomic, getter=containsVideoAttachment) BOOL containsVideoAttachment;
+@property (readonly, nonatomic, getter=containsAnyAttachment) BOOL containsAnyAttachment;
+@property (readonly, nonatomic, getter=referencesAnyAttachments) BOOL referencesAnyAttachments;
 @end
 
 @implementation ProcessPayload
 
-- (BOOL)containsImage
+- (BOOL)containsImageAttachment
 {
   return self.image != nil && self.imagePath != nil;
+}
+
+- (BOOL)containsVideoAttachment
+{
+  return self.videoURL != nil;
+}
+
+- (BOOL)containsAnyAttachment
+{
+  return self.containsImageAttachment || self.containsVideoAttachment;
+}
+
+- (BOOL)referencesAnyAttachments
+{
+  return self.imageURL != nil || self.videoURL != nil;
 }
 
 @end
@@ -53,6 +72,7 @@ typedef enum {
 {
   NSMutableSet *_processInfo;
   NSMutableDictionary *_parserInfo;
+  NSMutableDictionary *_videoURLs;
 }
 
 #pragma mark - AIPlugin
@@ -64,6 +84,7 @@ typedef enum {
   
   _processInfo = [NSMutableSet set];
   _parserInfo = [NSMutableDictionary dictionary];
+  _videoURLs = [NSMutableDictionary dictionary];
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter addObserver:self
                          selector:@selector(webProgressFinished:)
@@ -145,7 +166,7 @@ typedef enum {
 
 - (void)didProcessPayload:(ProcessPayload *)payload
 {
-  if (payload.containsImage == YES) {
+  if (payload.containsAnyAttachment == YES) {
     payload.state = ProcessPayloadStateReady;
   }
   else {
@@ -182,6 +203,9 @@ typedef enum {
   if ([contentType containsString:@"image/"] == YES) {
     payload.imageURL = url;
   }
+  else if ([contentType containsString:@"video/"] == YES) {
+    payload.videoURL = url;
+  }
   else if ([contentType containsString:@"text/html"] == YES) {
     NSDictionary *rules = [self ruleForURL:url];
     if (rules.count > 0) {
@@ -189,14 +213,17 @@ typedef enum {
     }
   }
   
-  if (payload.imageURL == nil) {
+  if (payload.referencesAnyAttachments == NO) {
     [self didProcessPayload:payload];
     return;
   }
   
-  [self fetchImageForPayload:payload];
+  if (payload.imageURL != nil
+      && payload.containsImageAttachment == NO) {
+    [self fetchImageForPayload:payload];
+  }
   
-  if (payload.containsImage == YES) {
+  if (payload.containsAnyAttachment == YES) {
     [self finalizePayload:payload];
   }
   
@@ -261,6 +288,9 @@ typedef enum {
     
     imageString = [[NSAttributedString attributedStringWithAttachment:attachment] mutableCopy];
     [imageString addAttribute:NSAttachmentAttributeName value:attachment range:NSMakeRange(0, imageString.length)];
+  }
+  else if (payload.videoURL != nil) {
+    _videoURLs[url.absoluteString] = @{@"videoURL": payload.videoURL.absoluteString, @"type": payload.mime};
   }
   
   NSMutableAttributedString *newString = [attributedString mutableCopy];
@@ -593,18 +623,91 @@ typedef enum {
                       }\
                     }\
                   }\
+                  function createVideoElement(url, type) {\
+                    var v = document.createElement('video');\
+                    v.controls = true;\
+                    v.autoplay = true;\
+                    var s = document.createElement('source');\
+                    s.src = url;\
+                    if (type) {\
+                      s.type = type;\
+                    }\
+                    v.appendChild(s);\
+                    return v;\
+                  }\
+                  function parentElementMatchingSelector(startNode, selector) {\
+                    var parent = startNode.parentElement;\
+                    while (parent) {\
+                      if (parent.webkitMatchesSelector(selector)) {\
+                        break;\
+                      }\
+                      parent = parent.parentElement;\
+                    }\
+                    return parent;\
+                  }\
+                  function fixupVideo() {\
+                    if (window.client) {\
+                      var videoURLs = JSON.parse(window.client.videoURLs());\
+                      if (videoURLs) {\
+                        var sel = window.getSelection();\
+                        for (var url in videoURLs) {\
+                          var videoURL = videoURLs[url]['videoURL'];\
+                          var type = videoURLs[url]['type'];\
+                          while (find(url)) {\
+                            var baseNode = sel.baseNode;\
+                            var a = (baseNode) ? parentElementMatchingSelector(baseNode, 'a') : null;\
+                            var parent = (a) ? a.parentElement : null;\
+                            if (parent && !parent.querySelector(\"video source[src=\\\"\"+videoURL+\"\\\"]\")) {\
+                              var video = createVideoElement(videoURL, type); \
+                              parent.insertBefore(video, a);\
+                              parent.insertBefore(document.createElement('br', a));\
+                            }\
+                          }\
+                        }\
+                      }\
+                    }\
+                  }\
+                  function domChangeHandler(){\
+                    fixupImages();\
+                    fixupVideo();\
+                  }\
                   window['fixupImages'] = fixupImages;\
                   var fixupImagesTimeout = null;\
-                  function doFixupImages() {\
+                  function domModified() {\
                     if (fixupImagesTimeout != null) {\
                       clearTimeout(fixupImagesTimeout); \
                     }\
-                    setTimeout(fixupImages, 1000);\
-                    document.removeEventListener('DOMSubtreeModified', doFixupImages, false);\
+                    setTimeout(domChangeHandler, 1000);\
+                    document.removeEventListener('DOMSubtreeModified', domModified, false);\
                   }\
-                  document.addEventListener('DOMSubtreeModified', doFixupImages, false);\
+                  document.addEventListener('DOMSubtreeModified', domModified, false);\
                   })()", cssPath];
   [webView stringByEvaluatingJavaScriptFromString:js];
+  [[webView windowScriptObject] setValue:self forKey:@"client"];
+}
+
+- (NSString *)videoURLs {
+  NSLog(@"%s", __PRETTY_FUNCTION__);
+  NSError *error;
+  NSData *jsonData = [NSJSONSerialization dataWithJSONObject:_videoURLs
+                                                     options:NSJSONWritingPrettyPrinted
+                                                       error:&error];
+  NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+  return jsonString;
+}
+
++ (BOOL)isSelectorExcludedFromWebScript:(SEL)selector {
+  if (selector == @selector(videoURLs)) {
+    return NO;
+  }
+  return YES;
+}
+
++ (NSString *)webScriptNameForSelector:(SEL)selector {
+  if (selector == @selector(videoURLs)) {
+    return @"videoURLs";
+  }
+  return nil;
 }
 
 @end
