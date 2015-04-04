@@ -646,8 +646,10 @@ typedef enum {
                   }\
                   function createVideoElement(url, type) {\
                     var v = document.createElement('video');\
-                    v.controls = true;\
+                    v.addEventListener('click', function() {v.controls = !v.controls}, false);\
+                    v.controls = false;\
                     v.autoplay = true;\
+                    v.loop = true;\
                     var s = document.createElement('source');\
                     s.src = url;\
                     if (type) {\
