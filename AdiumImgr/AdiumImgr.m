@@ -66,6 +66,10 @@ typedef enum {
   return self.imageURL != nil || self.videoURL != nil;
 }
 
+- (NSString *)description {
+  return [NSString stringWithFormat:@"[%@ imageURL=%@; videoURL=%@]", NSStringFromClass([self class]), self.imageURL, self.videoURL];
+}
+
 @end
 
 @implementation AdiumImgr
@@ -396,6 +400,7 @@ typedef enum {
                                          encoding:NSUTF8StringEncoding];
   HTMLDocument *doc = [HTMLDocument documentWithString:html];
   NSMutableSet *foundURLs = [NSMutableSet set];
+  NSMutableDictionary *foundTags = [NSMutableDictionary dictionary];
   for (NSString *query in rules) {
     @try {
       HTMLSelector *selector = [HTMLSelector selectorForString:query];
@@ -412,6 +417,7 @@ typedef enum {
           
           if (value != nil) {
             [foundURLs addObject:value];
+            foundTags[value] = element;
           }
         }
       }
@@ -419,17 +425,32 @@ typedef enum {
     @catch(NSException *exception) {
       NSLog(@"Error finding HTML Element matching: %@ exception: %@", query, exception);
     }
-    
-    NSAttributedString *postImageString = nil;
-    if (foundURLs.count > 1) {
-      NSDictionary *attrs = payload.attributes;
-      NSMutableDictionary *textAttributes = [attrs mutableCopy];
-      [textAttributes removeObjectForKey:NSLinkAttributeName];
-      postImageString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"[1 of %i]", (int)foundURLs.count] attributes:textAttributes];
-      payload.attributedSuffixString = postImageString;
+  }
+  
+  NSAttributedString *postImageString = nil;
+  if (foundURLs.count > 1) {
+    NSDictionary *attrs = payload.attributes;
+    NSMutableDictionary *textAttributes = [attrs mutableCopy];
+    [textAttributes removeObjectForKey:NSLinkAttributeName];
+    postImageString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"[1 of %i]", (int)foundURLs.count] attributes:textAttributes];
+    payload.attributedSuffixString = postImageString;
+  }
+  
+  for (NSString *url in foundURLs) {
+    HTMLElement *element = foundTags[url];
+    NSString *tagName = [element.tagName lowercaseString];
+    if (payload.videoURL == nil
+        && ([@"source" isEqualToString:tagName] == YES
+            || [@"video" isEqualToString:tagName] == YES)) {
+          payload.videoURL = [NSURL URLWithString:url];
+        }
+    else if (payload.imageURL == nil) {
+      payload.imageURL = [NSURL URLWithString:url];
     }
     
-    payload.imageURL = [NSURL URLWithString:[[foundURLs allObjects] firstObject]];
+    if (payload.imageURL != nil && payload.videoURL != nil) {
+      break;
+    }
   }
 }
 

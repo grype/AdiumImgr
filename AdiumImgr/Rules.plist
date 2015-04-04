@@ -14,6 +14,8 @@
 	</dict>
 	<key>https?://(.+\.)?imgur.com/.+|http://feedproxy.google.com/.*Imgur</key>
 	<dict>
+		<key>source[src*=&quot;i.imgur.com&quot;][type=&quot;video/mp4&quot;]</key>
+		<string>src</string>
 		<key>#image img[src*=&quot;i.imgur.com&quot;]</key>
 		<string>src</string>
 	</dict>
