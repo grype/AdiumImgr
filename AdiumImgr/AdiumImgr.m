@@ -436,20 +436,20 @@ typedef enum {
     payload.attributedSuffixString = postImageString;
   }
   
-  for (NSString *url in foundURLs) {
-    HTMLElement *element = foundTags[url];
-    NSString *tagName = [element.tagName lowercaseString];
-    if (payload.videoURL == nil
-        && ([@"source" isEqualToString:tagName] == YES
-            || [@"video" isEqualToString:tagName] == YES)) {
-          payload.videoURL = [NSURL URLWithString:url];
+  NSString *firstURLString = [[foundURLs allObjects] firstObject];
+  HTMLElement *element = (firstURLString != nil) ? foundTags[firstURLString] : nil;
+  NSString *tagName = element.tagName;
+  if (firstURLString != nil && tagName != nil) {
+    if ([@"source" isEqualToString:tagName] == YES
+        || [@"video" isEqualToString:tagName] == YES) {
+      NSString *type = [element attributes][@"type"];
+      if (type != nil) {
+        payload.mime = type;
+      }
+      payload.videoURL = [NSURL URLWithString:firstURLString];
         }
-    else if (payload.imageURL == nil) {
-      payload.imageURL = [NSURL URLWithString:url];
-    }
-    
-    if (payload.imageURL != nil && payload.videoURL != nil) {
-      break;
+    else {
+      payload.imageURL = [NSURL URLWithString:firstURLString];
     }
   }
 }
