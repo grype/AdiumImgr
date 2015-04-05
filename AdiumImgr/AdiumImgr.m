@@ -601,11 +601,13 @@ typedef enum {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
       NSFileManager *fileManager = [NSFileManager defaultManager];
       for (NSString *path in pathsToRemove) {
+        if ([fileManager fileExistsAtPath:path] == YES) {
         NSError *error = nil;
         BOOL result = [fileManager removeItemAtPath:path error:&error];
         if (result == NO) {
           NSLog(@"Error removing cached image file: %@; Error: %@", path, error);
         }
+      }
       }
     });
   }
