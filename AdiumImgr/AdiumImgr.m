@@ -447,7 +447,7 @@ typedef enum {
         payload.mime = type;
       }
       payload.videoURL = [NSURL URLWithString:firstURLString];
-        }
+    }
     else {
       payload.imageURL = [NSURL URLWithString:firstURLString];
     }
@@ -602,12 +602,12 @@ typedef enum {
       NSFileManager *fileManager = [NSFileManager defaultManager];
       for (NSString *path in pathsToRemove) {
         if ([fileManager fileExistsAtPath:path] == YES) {
-        NSError *error = nil;
-        BOOL result = [fileManager removeItemAtPath:path error:&error];
-        if (result == NO) {
-          NSLog(@"Error removing cached image file: %@; Error: %@", path, error);
+          NSError *error = nil;
+          BOOL result = [fileManager removeItemAtPath:path error:&error];
+          if (result == NO) {
+            NSLog(@"Error removing cached image file: %@; Error: %@", path, error);
+          }
         }
-      }
       }
     });
   }
@@ -626,7 +626,11 @@ typedef enum {
                     ourStyle.href = \"file://%@\"; \
                     document.head.appendChild(ourStyle); \
                   }\
-                  \
+                  function resetSelection() {\
+                    var sel = window.getSelection();\
+                    var body = document.body;\
+                    sel.setBaseAndExtent(body, 0, body, 0);\
+                  }\
                   function fixupImages() {\
                     var imgs = document.querySelectorAll('img[src*=\"adiumImgr\"]');\
                     if (!imgs || imgs.length === 0) {\
@@ -671,41 +675,42 @@ typedef enum {
                     return parent;\
                   }\
                   function fixupVideo() {\
-                    if (window.client) {\
-                      var videoURLs = JSON.parse(window.client.videoURLs());\
-                      if (videoURLs) {\
-                        var sel = window.getSelection();\
-                        for (var url in videoURLs) {\
-                          var videoURL = videoURLs[url]['videoURL'];\
-                          var type = videoURLs[url]['type'];\
-                          while (find(url)) {\
-                            var baseNode = sel.baseNode;\
-                            var a = (baseNode) ? parentElementMatchingSelector(baseNode, 'a') : null;\
-                            var parent = (a) ? a.parentElement : null;\
-                            if (parent && !parent.querySelector(\"video source[src=\\\"\"+videoURL+\"\\\"]\")) {\
-                              var video = createVideoElement(videoURL, type); \
-                              parent.insertBefore(video, a);\
-                              parent.insertBefore(document.createElement('br', a));\
-                            }\
-                          }\
+                    if (!window.client) {\
+                      return;\
+                    }\
+                    var videoURLs = JSON.parse(window.client.videoURLs());\
+                    if (!videoURLs || videoURLs.length == 0) {\
+                      return;\
+                    }\
+                    var sel = window.getSelection();\
+                    for (var url in videoURLs) {\
+                      var videoURL = videoURLs[url]['videoURL'];\
+                      var type = videoURLs[url]['type'];\
+                      while (find(url)) {\
+                        var baseNode = sel.baseNode;\
+                        var a = (baseNode) ? parentElementMatchingSelector(baseNode, 'a') : null;\
+                        var parent = (a) ? a.parentElement : null;\
+                        if (parent && !parent.querySelector(\"video source[src=\\\"\"+videoURL+\"\\\"]\")) {\
+                          var video = createVideoElement(videoURL, type); \
+                          parent.insertBefore(video, a);\
+                          parent.insertBefore(document.createElement('br', a));\
                         }\
                       }\
                     }\
                   }\
-                  function domChangeHandler(){\
-                    fixupImages();\
+                  \
+                  function domModified() {\
                     fixupVideo();\
                   }\
-                  window['fixupImages'] = fixupImages;\
-                  var fixupImagesTimeout = null;\
-                  function domModified() {\
-                    if (fixupImagesTimeout != null) {\
-                      clearTimeout(fixupImagesTimeout); \
-                    }\
-                    setTimeout(domChangeHandler, 1000);\
-                    document.removeEventListener('DOMSubtreeModified', domModified, false);\
+                  function readyStateChanged() {\
+                    fixupImage();\
                   }\
                   document.addEventListener('DOMSubtreeModified', domModified, false);\
+                  document.addEventListener('readystatechange', readyStateChanged, false);\
+                  \
+                  window['fixupImages'] = fixupImages;\
+                  window['fixupVideo'] = fixupVideo;\
+                  \
                   })()", cssPath];
   [webView stringByEvaluatingJavaScriptFromString:js];
   [[webView windowScriptObject] setValue:self forKey:@"client"];
