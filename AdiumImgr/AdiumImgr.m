@@ -717,7 +717,6 @@ typedef enum {
 }
 
 - (NSString *)videoURLs {
-  NSLog(@"%s", __PRETTY_FUNCTION__);
   NSError *error;
   NSData *jsonData = [NSJSONSerialization dataWithJSONObject:_videoURLs
                                                      options:NSJSONWritingPrettyPrinted
