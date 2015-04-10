@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>https?://www.gfycat.com/.+</key>
+	<dict>
+		<key>source[src*=&quot;gfycat.com&quot;][type=&quot;video/mp4&quot;]</key>
+		<string>src</string>
+	</dict>
 	<key>https?://cl.ly/image/.+</key>
 	<dict>
 		<key>#image img</key>
