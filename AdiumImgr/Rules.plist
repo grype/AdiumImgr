@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>evernote.com/.+</key>
+	<dict>
+		<key>meta[property=&quot;og:image&quot;]</key>
+		<string>content</string>
+	</dict>
 	<key>https?://www.gfycat.com/.+</key>
 	<dict>
 		<key>source[src*=&quot;gfycat.com&quot;][type=&quot;video/mp4&quot;]</key>
