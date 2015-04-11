@@ -2,27 +2,27 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>evernote.com/.+</key>
+	<key>\bevernote.com/.+</key>
 	<dict>
 		<key>meta[property=&quot;og:image&quot;]</key>
 		<string>content</string>
 	</dict>
-	<key>https?://www.gfycat.com/.+</key>
+	<key>\bgfycat.com/.+</key>
 	<dict>
 		<key>source[src*=&quot;gfycat.com&quot;][type=&quot;video/mp4&quot;]</key>
 		<string>src</string>
 	</dict>
-	<key>https?://cl.ly/image/.+</key>
+	<key>\bcl.ly/image/.+</key>
 	<dict>
 		<key>#image img</key>
 		<string>src</string>
 	</dict>
-	<key>https?://(.+\.)?explosm.net/comics/[0-9]+</key>
+	<key>\bexplosm.net/comics/[0-9]+</key>
 	<dict>
 		<key>#main-comic</key>
 		<string>src</string>
 	</dict>
-	<key>https?://(.+\.)?imgur.com/.+|http://feedproxy.google.com/.*Imgur</key>
+	<key>\bimgur.com/.+|\bfeedproxy.google.com/.*Imgur</key>
 	<dict>
 		<key>source[src*=&quot;i.imgur.com&quot;][type=&quot;video/mp4&quot;]</key>
 		<string>src</string>
