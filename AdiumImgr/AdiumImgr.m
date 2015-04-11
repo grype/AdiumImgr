@@ -294,7 +294,11 @@ typedef enum {
     [imageString addAttribute:NSAttachmentAttributeName value:attachment range:NSMakeRange(0, imageString.length)];
   }
   else if (payload.videoURL != nil) {
-    _videoURLs[url.absoluteString] = @{@"videoURL": payload.videoURL.absoluteString, @"type": payload.mime};
+    [payload.attributedString enumerateAttribute:NSLinkAttributeName inRange:payload.range options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
+      NSAttributedString *linkString = [payload.attributedString attributedSubstringFromRange:range];
+      NSURL *url = (NSURL *)value;
+      _videoURLs[url.absoluteString] = _videoURLs[[linkString string]] = @{@"videoURL": payload.videoURL.absoluteString, @"type": payload.mime};
+    }];
   }
   
   NSMutableAttributedString *newString = [attributedString mutableCopy];
